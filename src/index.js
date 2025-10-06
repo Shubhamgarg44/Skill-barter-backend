@@ -24,7 +24,10 @@ app.use(express.json());
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: "skill-barter-frontend.vercel.app",
+   origin: [
+      "http://localhost:5173", // for local dev
+      "https://skill-barter-frontend.vercel.app", // ✅ full URL with https
+    ],
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
