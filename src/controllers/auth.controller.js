@@ -1,5 +1,6 @@
 // src/controllers/auth.controller.js
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt"; // ✅ you missed importing bcrypt
 import User from "../models/User.js";
 import Wallet from "../models/Wallet.js";
 
@@ -8,36 +9,41 @@ export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const existingUser = User.find((u) => u.email === email);
+    // ✅ Check if user exists
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exist" });
     }
 
+    // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = {
-      id: User.length + 1,
+    // ✅ Create user in DB
+    const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
-    };
-    User.push(newUser);
+    });
 
-    // ✅ CREATE WALLET IN DATABASE
-    await Wallet.create({ user: newUser.id, balance: 100 });
+    // ✅ Create wallet linked to user
+    await Wallet.create({ user: newUser._id, balance: 100 });
 
     res.status(201).json({
       message: "User registered successfully",
-      user: { id: newUser.id, name: newUser.name, email: newUser.email },
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+      },
     });
   } catch (error) {
-  console.error("❌ Signup Error:", error);
-  res.status(500).json({
-    message: "Signup failed",
-    error: error.message,
-  });
+    console.error("❌ Signup Error:", error);
+    res.status(500).json({
+      message: "Signup failed",
+      error: error.message,
+    });
+  }
 };
-
 // -------------------- Login --------------------
 export const login = async (req, res) => {
   try {
