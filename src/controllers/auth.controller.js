@@ -1,6 +1,6 @@
 // src/controllers/auth.controller.js
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt"; // ✅ you missed importing bcrypt
+import bcrypt from "bcrypt"; // ✅ add this
 import User from "../models/User.js";
 import Wallet from "../models/Wallet.js";
 
@@ -9,25 +9,29 @@ export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // ✅ Check if user exists
+    // ✅ Properly check existing user in MongoDB
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "User already exist" });
+      return res.status(400).json({ message: "User already exists" });
     }
 
     // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ✅ Create user in DB
+    // ✅ Save user in MongoDB
     const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
     });
 
-    // ✅ Create wallet linked to user
-    await Wallet.create({ user: newUser._id, balance: 100 });
+    // ✅ Create wallet linked to the user
+    await Wallet.create({
+      user: newUser._id,
+      balance: 100,
+    });
 
+    // ✅ Response
     res.status(201).json({
       message: "User registered successfully",
       user: {
@@ -44,6 +48,7 @@ export const signup = async (req, res) => {
     });
   }
 };
+
 // -------------------- Login --------------------
 export const login = async (req, res) => {
   try {
