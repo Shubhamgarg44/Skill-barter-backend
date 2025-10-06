@@ -38,16 +38,15 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
+    if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+
+    // ✅ fetch wallet directly from DB
+    const wallet = await Wallet.findOne({ user: user._id });
 
     const token = jwt.sign(
       { id: user._id, email: user.email },
@@ -62,6 +61,9 @@ export const login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        walletBalance: wallet ? wallet.balance : user.walletBalance,
+        bio: user.bio,
+        role: user.role,
       },
     });
   } catch (error) {
